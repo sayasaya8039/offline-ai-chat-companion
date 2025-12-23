@@ -1,6 +1,6 @@
 {
   "name": "ai-chat-companion",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "オフラインデスクトップAIチャットコンパニオン - 完全オフラインで動作する友達みたいなAIチャットアプリ",
   "main": "dist-electron/main.mjs",
   "scripts": {

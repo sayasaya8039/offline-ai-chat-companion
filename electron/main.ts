@@ -18,6 +18,22 @@ let chatSession: any = null
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
 
+// パス解決（開発/本番で切り替え）
+const getPreloadPath = () => {
+  if (isDev) {
+    return path.join(__dirname, 'preload.js')
+  }
+  // 本番ビルド時
+  return path.join(app.getAppPath(), 'dist-electron', 'preload.js')
+}
+
+const getResourcePath = (relativePath: string) => {
+  if (isDev) {
+    return path.join(__dirname, '..', relativePath)
+  }
+  return path.join(app.getAppPath(), relativePath)
+}
+
 // モデル保存先
 const MODELS_DIR = isDev 
   ? path.join(__dirname, '..', 'models')
@@ -80,6 +96,10 @@ async function initializeLlama(): Promise<boolean> {
 
 /** メインウィンドウを作成 */
 function createWindow(): void {
+  const preloadPath = getPreloadPath()
+  console.log('Preload path:', preloadPath)
+  console.log('Preload exists:', fs.existsSync(preloadPath))
+  
   mainWindow = new BrowserWindow({
     width: 450,
     height: 700,
@@ -89,18 +109,18 @@ function createWindow(): void {
     transparent: false,
     resizable: true,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false
     },
-    icon: path.join(__dirname, '../resources/icon.png')
+    icon: getResourcePath('resources/icon.png')
   })
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173')
     mainWindow.webContents.openDevTools({ mode: 'detach' })
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+    mainWindow.loadFile(path.join(app.getAppPath(), 'dist', 'index.html'))
   }
 
   mainWindow.on('close', (e) => {
@@ -113,7 +133,7 @@ function createWindow(): void {
 
 /** システムトレイを作成 */
 function createTray(): void {
-  const iconPath = path.join(__dirname, '../resources/icon.png')
+  const iconPath = getResourcePath('resources/icon.png')
   const icon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 })
   
   tray = new Tray(icon)
